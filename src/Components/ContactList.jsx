@@ -1,11 +1,15 @@
-import Contact from './Contact.jsx';
-import { useSelector, useDispatch } from "react-redux";
-import { deleteContact } from "../Redux/contactsSlice";
+import React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { deleteContact } from '../Redux/contactOps';
+import { selectContacts } from '../Redux/contactsSlice';
+import { selectNameFilter } from '../Redux/filtersSlice';
+
+
 
 const ContactList = () => {
     const dispatch = useDispatch();
-    const contacts = useSelector(state => state.contacts.items);
-    const nameFilter = useSelector(state => state.filters.nameFilter);
+    const contacts = useSelector(selectContacts);
+    const nameFilter = useSelector(selectNameFilter);
 
     const filteredContacts = contacts.filter(contact =>
         contact.name.toLowerCase().includes(nameFilter.toLowerCase())
@@ -16,17 +20,22 @@ const ContactList = () => {
     };
 
     return (
-        <ul>
-            {filteredContacts.map((contact) => (
-                <Contact
-                    key={contact.id}
-                    id={contact.id}
-                    name={contact.name}
-                    number={contact.number}
-                    onDelete={handleDelete}
-                />
-            ))}
-        </ul>
+        <div>
+            <h2>Contact List</h2>
+            {filteredContacts.length === 0 ? (
+                <p>No contacts available</p>
+            ) : (
+                <ul>
+                    {filteredContacts.map((contact) => (
+                        <li key={contact.id}>
+                            <p><strong>{contact.name}</strong></p>
+                            <p>Phone: {contact.number}</p>
+                            <button onClick={() => handleDelete(contact.id)}>Delete</button>
+                        </li>
+                    ))}
+                </ul>
+            )}
+        </div>
     );
 };
 

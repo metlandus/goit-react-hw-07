@@ -1,37 +1,34 @@
-import React from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchContacts } from './Redux/contactOps';
+import { selectFilteredContacts } from './Redux/contactsSlice';
+
 import ContactForm from './Components/ContactForm/ContactForm';
-import SearchBox from './Components/SearchBox';
 import ContactList from './Components/ContactList';
-import { addContact } from './Redux/contactsSlice';
-import { changeFilter } from './Redux/filtersSlice';
-import './App.css';
+import Filter from './Components/SearchBox';
 
-const App = () => {
+
+function App() {
     const dispatch = useDispatch();
-    const contacts = useSelector((state) => state.contacts.items);
-    const searchValue = useSelector((state) => state.filters.nameFilter);
 
-    const handleAddContact = (newContact) => {
-        dispatch(addContact(newContact));
-    };
+    const contacts = useSelector(selectFilteredContacts);
+    const loading = useSelector((state) => state.contacts.loading);
+    const error = useSelector((state) => state.contacts.error);
 
-    const handleSearchChange = (e) => {
-        dispatch(changeFilter(e.target.value));
-    };
-
-    const filteredContacts = contacts.filter((contact) =>
-        contact.name.toLowerCase().includes(searchValue.toLowerCase())
-    );
+    useEffect(() => {
+        dispatch(fetchContacts());
+    }, [dispatch]);
 
     return (
-        <div className="container">
-            <h1 className="title">Phonebook</h1>
-            <ContactForm onAddContact={handleAddContact} />
-            <SearchBox inputValue={searchValue} handleChange={handleSearchChange} className="searchBox" />
-            <ContactList contacts={filteredContacts} />
+        <div className="App">
+            <h1>Phonebook</h1>
+            {loading && <p>Loading...</p>}
+            {error && <p style={{ color: 'red' }}>Error: {error}</p>}
+            <ContactForm />
+            <Filter />
+            <ContactList contacts={contacts} />
         </div>
     );
-};
+}
 
 export default App;

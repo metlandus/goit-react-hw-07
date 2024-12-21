@@ -1,9 +1,9 @@
-import { Formik, Form, Field, ErrorMessage } from "formik";
-import { nanoid } from "nanoid";
-import * as Yup from "yup";
-import { useSelector, useDispatch } from 'react-redux';
-import { addContact } from '../../Redux/contactsSlice';
+import { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { addContact } from '../../Redux/contactOps';
 import styles from './ContactForm.module.css';
+import * as Yup from 'yup';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
 
 const validationSchema = Yup.object({
     name: Yup.string()
@@ -15,39 +15,40 @@ const validationSchema = Yup.object({
         .required("Required"),
 });
 
-const initialValues = {
-    name: "",
-    number: "",
+const handleNumberChange = (event, setFieldValue) => {
+    const { value } = event.target;
+    const formattedValue = value
+        .replace(/\D/g, "")
+        .replace(/(\d{3})(\d{2})?(\d{2})?/, (_, g1, g2, g3) => {
+            return [g1, g2, g3].filter(Boolean).join("-");
+        });
+    setFieldValue("number", formattedValue);
 };
 
-const ContactForm = () => {
+const ContactForm = ({ contactToEdit }) => {
     const dispatch = useDispatch();
-    const contacts = useSelector(state => state.contacts.items);
+    const [name, setName] = useState('');
+    const [phone, setPhone] = useState('');
 
-    const handleSubmit = (values, actions) => {
-        const existingContact = contacts.find(contact => contact.name === values.name && contact.number === values.number);
-        if (existingContact) {
-            alert("This contact already exists!");
-            return;
+    useEffect(() => {
+        if (contactToEdit) {
+            setName(contactToEdit.name);
+            setPhone(contactToEdit.phone);
         }
+    }, [contactToEdit]);
 
-        const newContact = {
-            id: nanoid(),
-            name: values.name,
-            number: values.number,
-        };
-        dispatch(addContact(newContact));
-        actions.resetForm();
+    const handleSubmit = (values, { resetForm }) => {
+        if (contactToEdit) {
+            // Update contact logic here
+        } else {
+            dispatch(addContact({ name: values.name, phone: values.number }));
+        }
+        resetForm();
     };
 
-    const handleNumberChange = (event, setFieldValue) => {
-        const { value } = event.target;
-        const formattedValue = value
-            .replace(/\D/g, "")
-            .replace(/(\d{3})(\d{2})?(\d{2})?/, (_, g1, g2, g3) => {
-                return [g1, g2, g3].filter(Boolean).join("-");
-            });
-        setFieldValue("number", formattedValue);
+    const initialValues = {
+        name: contactToEdit ? contactToEdit.name : '',
+        number: contactToEdit ? contactToEdit.phone : '',
     };
 
     return (
@@ -76,7 +77,7 @@ const ContactForm = () => {
                         <ErrorMessage name="number" component="span" className={styles.error} />
                     </div>
 
-                    <button type="submit" className={styles.button}>Add Contact</button>
+                    <button type="submit" className={styles.button}>{contactToEdit ? 'Update Contact' : 'Add Contact'}</button>
                 </Form>
             )}
         </Formik>
